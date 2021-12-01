@@ -1,4 +1,4 @@
-/* Day 1, part 2 = ? */
+/* Day 1, part 2 = 1728 */
 
 #include <stdio.h>
 
