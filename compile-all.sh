@@ -5,7 +5,7 @@ do
     pushd . > /dev/null
     cd $directory
 
-	day=`grep -m 1 -o '[0-9]\+' part1.c | head -1`
+    day=`grep -m 1 -o '[0-9]\+' part1.c | head -1`
 
     echo "Building day $day..."
 
