@@ -9,8 +9,8 @@ do
 
     echo "Building day $day..."
 
-    gcc part1.c -O3 -o part1.o
-    gcc part2.c -O3 -o part2.o
+    gcc part1.c -o part1.o
+    gcc part2.c -o part2.o
 
     popd > /dev/null
 done
