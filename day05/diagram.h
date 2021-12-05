@@ -98,21 +98,10 @@ struct DiagramData* getDiagramData() {
         while(fscanf(inputFile, "%d,%d -> %d,%d", &x1, &y1, &x2, &y2) >= 1) {
             ++data->segmentCount;
 
-            if (x1 > data->maxX) {
-                data->maxX = x1;
-            }
-
-            if (x2 > data->maxX) {
-                data->maxX = x2;
-            }
-
-            if (y1 > data->maxY) {
-                data->maxY = y1;
-            }
-
-            if (y2 > data->maxY) {
-                data->maxY = y2;
-            }
+            data->maxY = max(y1, data->maxY);
+            data->maxY = max(y2, data->maxY);
+            data->maxX = max(x1, data->maxX);
+            data->maxX = max(x2, data->maxX);
         }
 
         data->segments = (struct Segment *)calloc(data->segmentCount, sizeof(struct Segment));
