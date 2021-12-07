@@ -5,6 +5,8 @@
 #include <string.h>
 #include "bits.h"
 
+#pragma clang optimize off
+
 char bit = '0';
 int bitPosition = 0;
 
@@ -108,3 +110,5 @@ int main() {
 
     return 0;
 }
+
+#pragma clang optimize on
