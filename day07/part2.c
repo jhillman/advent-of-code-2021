@@ -14,7 +14,7 @@ int main() {
             for (long i = 0; i < data->crabCount; i++) {
                 long distance = labs(data->positions[i] - position);
 
-                fuel += distance > 1 ? (long)(((float)distance / 2) * (distance + 1)) : distance;
+                fuel += distance > 1 ? distance * (distance + 1) / 2 : distance;
             }
 
             answer = min(answer, fuel);
