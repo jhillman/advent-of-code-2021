@@ -1,6 +1,5 @@
 /* Day 7, part 2 = 94017638 */
 
-
 #include "crabs.h"
 
 int main() {
@@ -18,9 +17,7 @@ int main() {
                 fuel += distance > 1 ? (long)(((float)distance / 2) * (distance + 1)) : distance;
             }
 
-            if (fuel <= answer) {
-                answer = fuel;
-            }
+            answer = min(answer, fuel);
         }
 
         freeCrabData(data);

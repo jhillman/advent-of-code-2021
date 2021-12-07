@@ -15,9 +15,7 @@ int main() {
                 fuel += labs(data->positions[i] - position);
             }
 
-            if (fuel <= answer) {
-                answer = fuel;
-            }
+            answer = min(answer, fuel);
         }
 
         freeCrabData(data);
