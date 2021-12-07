@@ -34,10 +34,11 @@ else
 fi
  
 allCorrect="true"
+totalTime=0.0
  
 if [ $start -le $end ]; then
-    echo "Day/Part         Answer                                        Correct"
-    echo "--------         ------                                        -------"
+    echo "Day/Part         Answer          Correct   Time"
+    echo "--------         ------          -------   ----"
  
     for (( number=$start; number <= $end; number++ )); do
         directory="$(printf "day%02d" $number)"
@@ -47,7 +48,9 @@ if [ $start -le $end ]; then
             cd $directory
             
             for (( part=1; part <= 2; part++ )); do 
+                startTime="$(gdate +'%s.%N')"
                 answer=`./part${part}.o`
+                time="$(gdate +"%s.%N - ${startTime}" | bc)"
                  
                 final=`grep -m 1 -o '= [^ *]*' part${part}.c | cut -d " " -f2`
 
@@ -61,17 +64,19 @@ if [ $start -le $end ]; then
                         allCorrect="false"
                     fi
                 fi
+
+                totalTime="$( bc <<<"$totalTime + $time" )"
                  
-                printf "Day %02d, part $part   %-48s %-4s\n" $number $answer $correct
+                printf "Day %02d, part $part   %-18s %-4s   %f\n" $number $answer $correct $time
             done
 
-            echo "----------------------------------------------------------------------"
+            echo "---------------------------------------------------"
  
             popd > /dev/null
         fi
     done
  
     if [ $start -lt $end ]; then
-        printf "All              ---                                              %s\n" $allCorrect
+        printf "All              ---                %s   %f\n" $allCorrect $totalTime
     fi
 fi
