@@ -30,7 +30,7 @@ struct MapData *getMapData() {
 
         fseek(inputFile, 0, SEEK_SET);
 
-        data->map = (int **)calloc(data->height + 1, sizeof(int *));
+        data->map = (int **)calloc(data->height, sizeof(int *));
 
         for (int y = 0; y < data->height; y++) {
             data->map[y] = (int *)calloc(data->width, sizeof(int));
