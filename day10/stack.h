@@ -19,20 +19,12 @@ void push(struct CharStack *stack, char value) {
     stack->data[stack->size++] = value;
 }
 
-char peek(struct CharStack *stack) {
-    if (stack->size > 0) {
-        return stack->data[stack->size - 1];
-    }
-
-    return '\0';
-}
-
 char pop(struct CharStack *stack) {
     if (stack->size > 0) {
         return stack->data[--stack->size];
     }
 
-    return '\0';
+    return '*';
 }
 
 void clear(struct CharStack *stack) {
