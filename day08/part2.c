@@ -1,6 +1,7 @@
 /* Day 8, part 2 = 1016804 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 

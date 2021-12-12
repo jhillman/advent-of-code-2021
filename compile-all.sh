@@ -23,8 +23,8 @@ do
     then
         echo "Building day $day with zig..."
 
-        zig cc part1.c -o part1.o
-        zig cc part2.c -o part2.o
+        zig cc -O part1.c -o part1.o
+        zig cc -O part2.c -o part2.o
     else
         echo "Building day $day with gcc..."
 
