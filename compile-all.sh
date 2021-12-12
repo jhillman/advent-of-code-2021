@@ -1,5 +1,17 @@
 #!/bin/bash
 
+zig=0
+
+for arg in "$@"
+do
+    case $arg in
+        -z|--zig)
+        zig=1
+        shift
+        ;;
+    esac
+done
+
 for directory in $( find ./ -type d -name "day*" | sort )
 do
     pushd . > /dev/null
@@ -7,10 +19,18 @@ do
 
     day=`grep -m 1 -o '[0-9]\+' part1.c | head -1`
 
-    echo "Building day $day..."
+    if [ $zig == 1 ]
+    then
+        echo "Building day $day with zig..."
 
-    gcc part1.c -O3 -o part1.o
-    gcc part2.c -O3 -o part2.o
+        zig cc part1.c -o part1.o
+        zig cc part2.c -o part2.o
+    else
+        echo "Building day $day with gcc..."
+
+        gcc part1.c -O3 -o part1.o
+        gcc part2.c -O3 -o part2.o
+    fi
 
     popd > /dev/null
 done
