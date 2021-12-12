@@ -83,17 +83,20 @@ int pathCount(struct CaveData *data, struct Cave *cave, char *visitedSmallCaves,
         return 1;
     }
 
-    char *currentPathSmallCaves = (char *) calloc(100, sizeof(char));
-    strcpy(currentPathSmallCaves, visitedSmallCaves);
+    char *currentPathSmallCaves = (char *) calloc(32, sizeof(char));
+
+    if (visitedSmallCaves) {
+        strcpy(currentPathSmallCaves, visitedSmallCaves);
+    }
 
     if (cave->type == SMALL) {
         strcat(currentPathSmallCaves, cave->name);
     }
 
-    bool secondVisit = cave->type == SMALL && strstr(visitedSmallCaves, cave->name);
+    bool secondVisit = cave->type == SMALL && visitedSmallCaves && strstr(visitedSmallCaves, cave->name);
 
     for (int i = 0; i < cave->connectionCount; i++) {
-        if (!strstr(visitedSmallCaves, cave->connections[i]->name) || (allowSecondVisit && !secondVisit)) {
+        if (!visitedSmallCaves || !strstr(visitedSmallCaves, cave->connections[i]->name) || (allowSecondVisit && !secondVisit)) {
             paths += pathCount(data, cave->connections[i], currentPathSmallCaves, allowSecondVisit && !secondVisit);
         }
     }
