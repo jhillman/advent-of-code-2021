@@ -16,6 +16,8 @@ struct Fold {
 struct DotsData {
     int width;
     int height;
+    int originalHeight;
+
     int **dots;
     int dotCount;
 
@@ -86,6 +88,8 @@ struct DotsData *getDotsData() {
         ++data->width;
         ++data->height;
 
+        data->originalHeight = data->height;
+
         while (fscanf(inputFile, "fold along %c=%d%c", &axis, &value, &c) > 0) {
             ++data->foldCount;
         }
@@ -120,6 +124,10 @@ struct DotsData *getDotsData() {
 }
 
 void freeDotsData(struct DotsData *data) {
+    for (int y = 0; y < data->originalHeight; y++) {
+        free(data->dots[y]);
+    }
+
     free(data->dots);
     free(data->folds);
     free(data);
