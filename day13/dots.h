@@ -57,7 +57,7 @@ int foldDots(struct DotsData *data, struct Fold fold) {
 void printDots(struct DotsData *data) {
     for (int y = 0; y < data->height; y++) {
         for (int x = 0; x < data->width; x++) {
-            printf(data->dots[y][x] ? "#" : ".");
+            printf(data->dots[y][x] ? "#" : " ");
         }
 
         printf("\n");
