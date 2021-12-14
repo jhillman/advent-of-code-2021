@@ -37,8 +37,9 @@ void incrementPair(struct PolymerData *data, char left, char right, long count) 
 }
 
 long performSteps(struct PolymerData *data, int steps) {
+    struct PolymerPair *pairs = (struct PolymerPair *)calloc(data->pairCount, sizeof(struct PolymerPair));
+
     for (int i = 0; i < steps; i++) {
-        struct PolymerPair *pairs = (struct PolymerPair *)calloc(data->pairCount, sizeof(struct PolymerPair));
         memcpy(pairs, data->pairs, data->pairCount * sizeof(struct PolymerPair));
 
         for (int j = 0; j < data->pairCount; j++) {
@@ -51,9 +52,9 @@ long performSteps(struct PolymerData *data, int steps) {
                 incrementPair(data, pairs[j].insertion, pairs[j].right, pairs[j].count);
             }
         }
-
-        free(pairs);
     }
+
+    free(pairs);
 
     long elementCount;
     long maxElementCount = 0;
