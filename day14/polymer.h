@@ -25,7 +25,7 @@ void addPair(struct PolymerData *data, char left, char right, char insertion) {
     data->pairs[data->pairCount - 1].insertion = insertion;
 }
 
-void updatePairCount(struct PolymerData *data, char left, char right, long count) {
+void increasePairCount(struct PolymerData *data, char left, char right, long count) {
     for (int i = 0; i < data->pairCount; i++) {
         struct PolymerPair pair = data->pairs[i];
 
@@ -48,8 +48,8 @@ long performSteps(struct PolymerData *data, int steps) {
 
                 data->pairs[j].count -= pairs[j].count;
 
-                updatePairCount(data, pairs[j].left, pairs[j].insertion, pairs[j].count);
-                updatePairCount(data, pairs[j].insertion, pairs[j].right, pairs[j].count);
+                increasePairCount(data, pairs[j].left, pairs[j].insertion, pairs[j].count);
+                increasePairCount(data, pairs[j].insertion, pairs[j].right, pairs[j].count);
             }
         }
     }
@@ -106,7 +106,7 @@ struct PolymerData *getPolymerData() {
             right = c;
 
             if (left && right) {
-                updatePairCount(data, left, right, 1);
+                increasePairCount(data, left, right, 1);
             }
 
             left = right;
