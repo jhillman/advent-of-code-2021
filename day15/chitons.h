@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 #define MAX_LEVEL 1000000000
 
@@ -21,16 +22,39 @@ bool equal(struct Location a, struct Location b) {
     return a.x == b.x && a.y == b.y;
 }
 
-int compare(const void *a, const void *b) {
-    return ((struct Location *)b)->risk - ((struct Location *)a)->risk;
-}
-
 struct LocationQueue {
     struct Location *data;
     int capacity;
     int size;
-    bool needsSorting;
 };
+
+void swap(struct Location *a, struct Location *b) {
+    struct Location temp = *b;
+
+    *b = *a;
+    *a = temp;
+}   
+
+void heapify(struct LocationQueue *queue, int index) {
+    if (queue->size > 1) {
+        int smallest = index;
+        int left = 2 * index + 1;
+        int right = 2 * index + 2;
+
+        if (left < queue->size && queue->data[left].risk < queue->data[smallest].risk) {
+            smallest = left;
+        }
+
+        if (right < queue->size && queue->data[right].risk < queue->data[smallest].risk) {
+            smallest = right;
+        }
+
+        if (smallest != index) {
+            swap(&queue->data[index], &queue->data[smallest]);
+            heapify(queue, smallest);
+        }
+    }
+}
 
 void enqueue(struct LocationQueue *queue, struct Location location) {
     if (queue->capacity == 0) {
@@ -42,17 +66,24 @@ void enqueue(struct LocationQueue *queue, struct Location location) {
     }
 
     queue->data[queue->size++] = location;
-    queue->needsSorting = queue->size > 1 && queue->data[queue->size - 1].risk > queue->data[queue->size - 2].risk;
+
+    for (int i = queue->size / 2 - 1; i >= 0; i--) {
+        heapify(queue, i);
+    }
 }
 
 struct Location dequeue(struct LocationQueue *queue) {
-    if (queue->needsSorting) {
-        qsort(queue->data, queue->size, sizeof(struct Location), compare);
+    struct Location value = *queue->data;
 
-        queue->needsSorting = false;
+    --queue->size;
+
+    memcpy(queue->data, queue->data + 1, queue->size * sizeof(struct Location));
+
+    for (int i = queue->size / 2 - 1; i >= 0; i--) {
+        heapify(queue, i);
     }
 
-    return queue->data[--queue->size];
+    return value;
 }
 
 void clear(struct LocationQueue *queue) {
@@ -103,6 +134,13 @@ int lowestRisk(struct ChitonsData *data) {
                 cumulativeRiskLevels[y][x] = risk;
 
                 enqueue(queue, (struct Location){x, y, risk});
+
+                if (queue->size == 1000000) {
+                    printf("\n\nqueue:");
+                    for (int i = 0; i < queue->size; i++) {
+                        printf("%d\n", queue->data[i].risk);
+                    }
+                }
             }
         }
     }
@@ -115,6 +153,7 @@ int lowestRisk(struct ChitonsData *data) {
 
     free(cumulativeRiskLevels);
 
+    free(queue->data);
     free(queue);
 
     return risk;
