@@ -73,7 +73,7 @@ void enqueue(struct LocationQueue *queue, struct Location location) {
 }
 
 struct Location dequeue(struct LocationQueue *queue) {
-    struct Location value = *queue->data;
+    struct Location location = *queue->data;
 
     --queue->size;
 
@@ -83,7 +83,7 @@ struct Location dequeue(struct LocationQueue *queue) {
         heapify(queue, i);
     }
 
-    return value;
+    return location;
 }
 
 void clear(struct LocationQueue *queue) {
