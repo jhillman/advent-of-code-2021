@@ -12,7 +12,9 @@ int main() {
         for (int y = 0; y < data->height; y++) {
             for (int x = 0; x < data->width; x++) {
                 if (y >= originalHeight || x >= originalWidth) {
-                    int level = y >= originalHeight ? data->riskLevels[y - originalHeight][x] : data->riskLevels[y][x - originalWidth];
+                    int level = y >= originalHeight ? 
+                        data->riskLevels[y - originalHeight][x] : 
+                        data->riskLevels[y][x - originalWidth];
 
                     if (++level > 9) {
                         level = 1;
