@@ -79,6 +79,8 @@ struct PolymerData *getPolymerData() {
     FILE *inputFile = fopen("input.txt", "r");
 
     if (inputFile) {
+        char polymerTemplate[32];
+        char *element;
         char left;
         char right;
         char insertion;
@@ -86,7 +88,7 @@ struct PolymerData *getPolymerData() {
 
         struct PolymerData *data = (struct PolymerData *)calloc(1, sizeof(struct PolymerData));
 
-        while ((c = fgetc(inputFile)) != '\n');
+        fgets(polymerTemplate, sizeof(polymerTemplate), inputFile);
 
         // \n
         fgetc(inputFile);
@@ -95,21 +97,23 @@ struct PolymerData *getPolymerData() {
             addPair(data, left, right, insertion);
         }
 
-        fseek(inputFile, 0, SEEK_SET);
+        element = polymerTemplate;
 
         left = '\0';
         right = '\0';
 
-        while ((c = fgetc(inputFile)) != '\n') {
-            ++data->elements[c - 'A'];
+        while (*element && *element != '\n') {
+            ++data->elements[*element - 'A'];
 
-            right = c;
+            right = *element;
 
             if (left && right) {
                 increasePairCount(data, left, right, 1);
             }
 
             left = right;
+
+            ++element;
         }
 
         fclose(inputFile);
