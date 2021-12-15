@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <math.h>
 
 #define MAX_LEVEL 1000000000
 
@@ -23,10 +22,7 @@ bool equal(struct Location a, struct Location b) {
 }
 
 int compare(const void *a, const void *b) {
-    struct Location *aLocation = (struct Location *)a;
-    struct Location *bLocation = (struct Location *)b;
-
-    return bLocation->risk - aLocation->risk;
+    return ((struct Location *)b)->risk - ((struct Location *)a)->risk;
 }
 
 struct LocationQueue {
