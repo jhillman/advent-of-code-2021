@@ -14,6 +14,7 @@ enum CaveType {
 struct Cave {
     char name[8];
     enum CaveType type;
+    int flag;
     
     struct Cave **connections;
     int connectionCount;
@@ -53,6 +54,8 @@ struct Cave *getCave(struct CaveData *data, char *name) {
             cave->type = isupper(*name) ? BIG : SMALL;
         }
 
+        cave->flag = 1 << (data->caveCount - 1);
+
         data->caves[data->caveCount - 1] = cave;
     }
 
@@ -76,32 +79,26 @@ void addConnections(struct CaveData * data, char *firstName, char *secondName) {
     addConnection(secondCave, firstCave);
 }
 
-int pathCount(struct CaveData *data, struct Cave *cave, char *visitedSmallCaves, bool allowSecondVisit) {
+int pathCount(struct CaveData *data, struct Cave *cave, int visitedSmallCaves, bool allowSecondVisit) {
     int paths = 0;
 
     if (cave->type == END) {
         return 1;
     }
 
-    char *currentPathSmallCaves = (char *) calloc(32, sizeof(char));
-
-    if (visitedSmallCaves) {
-        strcpy(currentPathSmallCaves, visitedSmallCaves);
-    }
+    int currentPathSmallCaves = visitedSmallCaves;
 
     if (cave->type == SMALL) {
-        strcat(currentPathSmallCaves, cave->name);
+        currentPathSmallCaves |= cave->flag;
     }
 
-    bool secondVisit = cave->type == SMALL && visitedSmallCaves && strstr(visitedSmallCaves, cave->name);
+    bool secondVisit = cave->type == SMALL && visitedSmallCaves & cave->flag;
 
     for (int i = 0; i < cave->connectionCount; i++) {
-        if (!visitedSmallCaves || !strstr(visitedSmallCaves, cave->connections[i]->name) || (allowSecondVisit && !secondVisit)) {
+        if (!(visitedSmallCaves & cave->connections[i]->flag) || (allowSecondVisit && !secondVisit)) {
             paths += pathCount(data, cave->connections[i], currentPathSmallCaves, allowSecondVisit && !secondVisit);
         }
     }
-
-    free(currentPathSmallCaves);
 
     return paths;
 }

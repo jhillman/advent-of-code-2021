@@ -6,7 +6,7 @@ int main() {
     struct CaveData *data = getCaveData();
 
     if (data) {
-        int answer = pathCount(data, data->start, NULL, true);
+        int answer = pathCount(data, data->start, 0, true);
 
         freeCaveData(data);
 
