@@ -33,6 +33,7 @@ struct LocationQueue {
     struct Location *data;
     int capacity;
     int size;
+    bool needsSorting;
 };
 
 void enqueue(struct LocationQueue *queue, struct Location location) {
@@ -45,10 +46,15 @@ void enqueue(struct LocationQueue *queue, struct Location location) {
     }
 
     queue->data[queue->size++] = location;
+    queue->needsSorting = queue->size > 1 && queue->data[queue->size - 1].risk > queue->data[queue->size - 2].risk;
 }
 
 struct Location dequeue(struct LocationQueue *queue) {
-    qsort(queue->data, queue->size, sizeof(struct Location), compare);
+    if (queue->needsSorting) {
+        qsort(queue->data, queue->size, sizeof(struct Location), compare);
+
+        queue->needsSorting = false;
+    }
 
     return queue->data[--queue->size];
 }
