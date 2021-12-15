@@ -18,12 +18,6 @@ struct Location {
     int risk;
 };
 
-struct LocationQueue {
-    struct Location *data;
-    int capacity;
-    int size;
-};
-
 bool equal(struct Location a, struct Location b) {
     return a.x == b.x && a.y == b.y;
 }
@@ -34,6 +28,12 @@ int compare(const void *a, const void *b) {
 
     return bLevel->risk - aLevel->risk;
 }
+
+struct LocationQueue {
+    struct Location *data;
+    int capacity;
+    int size;
+};
 
 void enqueue(struct LocationQueue *queue, struct Location location) {
     if (queue->capacity == 0) {
@@ -51,21 +51,6 @@ struct Location dequeue(struct LocationQueue *queue) {
     qsort(queue->data, queue->size, sizeof(struct Location), compare);
 
     return queue->data[--queue->size];
-}
-
-void delete(struct LocationQueue *queue, struct Location location) {
-    for (int i = 0; i < queue->size; i++) {
-        struct Location location = queue->data[i];
-
-        if (equal(queue->data[i], location)) {
-            for (int j = i + 1; j < queue->size; j++) {
-                queue->data[j - 1] = queue->data[j];
-            }
-
-            --queue->size;
-            break;
-        }
-    }
 }
 
 void clear(struct LocationQueue *queue) {
@@ -113,10 +98,6 @@ int lowestRisk(struct ChitonsData *data) {
             int risk = cumulativeRiskLevels[location.y][location.x] + data->riskLevels[y][x] - '0';
 
             if (cumulativeRiskLevels[y][x] > risk) {
-                if (cumulativeRiskLevels[y][x] != MAX_LEVEL) {
-                    delete(queue, (struct Location){x, y, cumulativeRiskLevels[y][x]});
-                }
-
                 cumulativeRiskLevels[y][x] = risk;
 
                 enqueue(queue, (struct Location){x, y, risk});
