@@ -23,10 +23,10 @@ bool equal(struct Location a, struct Location b) {
 }
 
 int compare(const void *a, const void *b) {
-    struct Location *aLevel = (struct Location *)a;
-    struct Location *bLevel = (struct Location *)b;
+    struct Location *aLocation = (struct Location *)a;
+    struct Location *bLocation = (struct Location *)b;
 
-    return bLevel->risk - aLevel->risk;
+    return bLocation->risk - aLocation->risk;
 }
 
 struct LocationQueue {
