@@ -97,6 +97,8 @@ struct PolymerData *getPolymerData() {
             addPair(data, left, right, insertion);
         }
 
+        fclose(inputFile);
+
         element = polymerTemplate;
 
         left = '\0';
@@ -115,8 +117,6 @@ struct PolymerData *getPolymerData() {
 
             ++element;
         }
-
-        fclose(inputFile);
 
         return data;
     }
