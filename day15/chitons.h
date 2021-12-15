@@ -134,13 +134,6 @@ int lowestRisk(struct ChitonsData *data) {
                 cumulativeRiskLevels[y][x] = risk;
 
                 enqueue(queue, (struct Location){x, y, risk});
-
-                if (queue->size == 1000000) {
-                    printf("\n\nqueue:");
-                    for (int i = 0; i < queue->size; i++) {
-                        printf("%d\n", queue->data[i].risk);
-                    }
-                }
             }
         }
     }
