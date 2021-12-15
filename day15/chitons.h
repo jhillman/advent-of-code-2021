@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <math.h>
 
 #define MAX_LEVEL 1000000000
 
@@ -11,60 +12,52 @@ struct ChitonsData {
     char **riskLevels;
 };
 
-struct LocationLevel {
+struct Location {
     int x;
     int y;
-    int level;
+    int risk;
 };
 
-struct LocationLevelQueue {
-    struct LocationLevel *data;
+struct LocationQueue {
+    struct Location *data;
     int capacity;
     int size;
 };
 
-bool equal(struct LocationLevel a, struct LocationLevel b) {
-    return a.x == b.x && a.y == b.y && a.level == b.level;
+bool equal(struct Location a, struct Location b) {
+    return a.x == b.x && a.y == b.y;
 }
 
 int compare(const void *a, const void *b) {
-    struct LocationLevel *aLevel = (struct LocationLevel *)a;
-    struct LocationLevel *bLevel = (struct LocationLevel *)b;
+    struct Location *aLevel = (struct Location *)a;
+    struct Location *bLevel = (struct Location *)b;
 
-    if (aLevel->level == bLevel->level) {
-        if (aLevel->x != bLevel->x) {
-            return bLevel->x - aLevel->x;
-        } else {
-            return bLevel->y - aLevel->y;
-        }
-    }
-
-    return bLevel->level - aLevel->level;
+    return bLevel->risk - aLevel->risk;
 }
 
-void enqueue(struct LocationLevelQueue *queue, struct LocationLevel value) {
+void enqueue(struct LocationQueue *queue, struct Location location) {
     if (queue->capacity == 0) {
-        queue->capacity = 10;
-        queue->data = (struct LocationLevel *)malloc(queue->capacity * sizeof(struct LocationLevel));
+        queue->capacity = 1000;
+        queue->data = (struct Location *)malloc(queue->capacity * sizeof(struct Location));
     } else if (queue->size == queue->capacity) {
-        queue->capacity += 10;
-        queue->data = (struct LocationLevel *)realloc(queue->data, queue->capacity * sizeof(struct LocationLevel));
+        queue->capacity += 1000;
+        queue->data = (struct Location *)realloc(queue->data, queue->capacity * sizeof(struct Location));
     }
 
-    queue->data[queue->size++] = value;
+    queue->data[queue->size++] = location;
 }
 
-struct LocationLevel dequeue(struct LocationLevelQueue *queue) {
-    qsort(queue->data, queue->size, sizeof(struct LocationLevel), compare);
+struct Location dequeue(struct LocationQueue *queue) {
+    qsort(queue->data, queue->size, sizeof(struct Location), compare);
 
     return queue->data[--queue->size];
 }
 
-void delete(struct LocationLevelQueue *queue, struct LocationLevel level) {
+void delete(struct LocationQueue *queue, struct Location location) {
     for (int i = 0; i < queue->size; i++) {
-        struct LocationLevel level = queue->data[i];
+        struct Location location = queue->data[i];
 
-        if (equal(queue->data[i], level)) {
+        if (equal(queue->data[i], location)) {
             for (int j = i + 1; j < queue->size; j++) {
                 queue->data[j - 1] = queue->data[j];
             }
@@ -75,63 +68,69 @@ void delete(struct LocationLevelQueue *queue, struct LocationLevel level) {
     }
 }
 
-void clear(struct LocationLevelQueue *queue) {
+void clear(struct LocationQueue *queue) {
     while(queue->size) {
         dequeue(queue);
     }    
 }
 
 int lowestRisk(struct ChitonsData *data) {
-    int **riskLevels = (int **)malloc(data->height * sizeof(int *));
+    int **cumulativeRiskLevels = (int **)malloc(data->height * sizeof(int *));
 
     for (int y = 0; y < data->height; y++) {
-        riskLevels[y] = (int *)malloc(data->width * sizeof(int));
+        cumulativeRiskLevels[y] = (int *)calloc(data->width, sizeof(int));
 
         for (int x = 0; x < data->width; x++) {
-            riskLevels[y][x] = MAX_LEVEL;
+            cumulativeRiskLevels[y][x] = MAX_LEVEL;
         }
     }
 
-    struct LocationLevelQueue *queue = (struct LocationLevelQueue *)calloc(1, sizeof(struct LocationLevel *));
-    struct LocationLevel level = {0, 0, 0};
+    struct LocationQueue *queue = (struct LocationQueue *)calloc(1, sizeof(struct Location *));
+    struct Location end = {data->width - 1, data->height - 1, 0};
 
     int xDeltas[] = {-1, 0, 1, 0};
     int yDeltas[] = {0, 1, 0, -1};
 
-    enqueue(queue, (struct LocationLevel){0, 0, 0});
+    enqueue(queue, (struct Location){0, 0, 0});
 
-    **riskLevels = 0;
+    **cumulativeRiskLevels = 0;
 
     while (queue->size) {
-        struct LocationLevel level = dequeue(queue);
+        struct Location location = dequeue(queue);
+
+        if (equal(location, end)) {
+            break;
+        }
 
         for (int i = 0; i < 4; i++) {
-            int x = level.x + xDeltas[i];
-            int y = level.y + yDeltas[i];
+            int x = location.x + xDeltas[i];
+            int y = location.y + yDeltas[i];
 
             if (!(x >= 0 && x < data->width && y >= 0 && y < data->height)) {
                 continue;
             }
 
-            if (riskLevels[y][x] > riskLevels[level.y][level.x] + data->riskLevels[y][x] - '0') {
-                if (riskLevels[y][x] != MAX_LEVEL) {
-                    delete(queue, (struct LocationLevel){x, y, riskLevels[y][x]});
+            int risk = cumulativeRiskLevels[location.y][location.x] + data->riskLevels[y][x] - '0';
+
+            if (cumulativeRiskLevels[y][x] > risk) {
+                if (cumulativeRiskLevels[y][x] != MAX_LEVEL) {
+                    delete(queue, (struct Location){x, y, cumulativeRiskLevels[y][x]});
                 }
 
-                riskLevels[y][x] = riskLevels[level.y][level.x] + data->riskLevels[y][x] - '0';
+                cumulativeRiskLevels[y][x] = risk;
 
-                enqueue(queue, (struct LocationLevel){x, y, riskLevels[y][x]});
+                enqueue(queue, (struct Location){x, y, risk});
             }
         }
     }
 
-    int risk = riskLevels[data->height - 1][data->width - 1];
+    int risk = cumulativeRiskLevels[end.y][end.x];
 
     for (int y = 0; y < data->height; y++) {
-        free(riskLevels[y]);
+        free(cumulativeRiskLevels[y]);
     }
 
-    free(riskLevels);
+    free(cumulativeRiskLevels);
 
     free(queue);
 
