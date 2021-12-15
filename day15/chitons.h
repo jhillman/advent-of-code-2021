@@ -9,7 +9,7 @@ struct ChitonsData {
     int width;
     int height;
 
-    char **riskLevels;
+    int **riskLevels;
 };
 
 struct Location {
@@ -101,7 +101,7 @@ int lowestRisk(struct ChitonsData *data) {
                 continue;
             }
 
-            int risk = cumulativeRiskLevels[location.y][location.x] + data->riskLevels[y][x] - '0';
+            int risk = cumulativeRiskLevels[location.y][location.x] + data->riskLevels[y][x];
 
             if (cumulativeRiskLevels[y][x] > risk) {
                 cumulativeRiskLevels[y][x] = risk;
@@ -148,14 +148,14 @@ struct ChitonsData *getChitonsData(int multiplier) {
 
         fseek(inputFile, 0, SEEK_SET);
 
-        data->riskLevels = (char **)calloc(data->height * multiplier, sizeof(char *));
+        data->riskLevels = (int **)calloc(data->height * multiplier, sizeof(int *));
 
         for (int y = 0; y < data->height * multiplier; y++) {
-            data->riskLevels[y] = (char *)calloc(data->width * multiplier, sizeof(char));
+            data->riskLevels[y] = (int *)calloc(data->width * multiplier, sizeof(int));
 
             for (int x = 0; x < data->width * multiplier; x++) {
                 if (x < data->width) {
-                    data->riskLevels[y][x] = fgetc(inputFile);
+                    data->riskLevels[y][x] = fgetc(inputFile) - '0';
                 }
             }
 

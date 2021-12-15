@@ -14,8 +14,8 @@ int main() {
                 if (y >= originalHeight || x >= originalWidth) {
                     int level = y >= originalHeight ? data->riskLevels[y - originalHeight][x] : data->riskLevels[y][x - originalWidth];
 
-                    if (++level > '9') {
-                        level = '1';
+                    if (++level > 9) {
+                        level = 1;
                     }
 
                     data->riskLevels[y][x] = level;
