@@ -3,13 +3,51 @@
 #include <string.h>
 
 enum PacketType {
-    VALUE = 4
+    SUM,
+    PRODUCT,
+    MINIMUM,
+    MAXIMUM,
+    VALUE,
+    GREATER_THAN,
+    LESS_THAN,
+    EQUAL_TO
 };
 
 enum OperatorLengthType {
     SUB_PACKET_LENGTH,
     SUB_PACKET_COUNT
 };
+
+struct Expression {
+    enum PacketType type;
+    long value;
+};
+
+struct ExpressionStack {
+    struct Expression *data;
+    int size;
+    int capacity;
+};
+
+void pushExpression(struct ExpressionStack *stack, struct Expression expression) {
+    if (stack->capacity == 0) {
+        stack->capacity = 5;
+        stack->data = (struct Expression *)malloc(stack->capacity * sizeof(struct Expression));
+    } else if (stack->size == stack->capacity) {
+        stack->capacity += 5;
+        stack->data = (struct Expression *)realloc(stack->data, stack->capacity * sizeof(struct Expression));
+    }
+
+    stack->data[stack->size++] = expression;
+}
+
+struct Expression popExpression(struct ExpressionStack *stack) {
+    struct Expression expression = stack->data[stack->size - 1];
+
+    --stack->size;
+
+    return expression;
+}
 
 int readPacket(char *packet, int *packetLength);
 

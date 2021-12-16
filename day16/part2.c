@@ -1,14 +1,17 @@
 /* Day 16, part 2 = ? */
 
-#include <stdio.h>
+#include "bits.h"
 
 int main() {
-    FILE *inputFile = fopen("input.txt", "r");
+    char *transmission = getTransmission();
 
-    if (inputFile) {
-        int answer = 0;
+    if (transmission) {
+        char *packet = transmission;
+        int length = 0;
 
-        fclose(inputFile);
+        int answer = readPacket(packet, &length);
+
+        free(transmission);
 
         printf("%d", answer);
     }
