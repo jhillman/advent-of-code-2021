@@ -10,21 +10,12 @@ int main() {
         int targetMaxX;
         int targetMinY;
         int targetMaxY;
-        int answer = 0;
 
         fscanf(inputFile, "target area: x=%d..%d, y=%d..%d", &targetMinX, &targetMaxX, &targetMinY, &targetMaxY);
 
         fclose(inputFile);
 
-        for (int x = 0; x < 100; x++) {
-            for (int y = 0; y < 300; y++) {
-                struct ShotResult result = shoot(x, y, targetMinX, targetMaxX, targetMinY, targetMaxY);
-
-                if (result.hitTarget && result.maxHeight > answer) {
-                    answer = result.maxHeight;
-                }
-            }
-        }
+        int answer = shoot(targetMinX, targetMaxX, targetMinY, targetMaxY).maxHeight;
 
         printf("%d", answer);
     }
