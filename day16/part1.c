@@ -7,12 +7,17 @@ int main() {
 
     if (transmission) {
         char *packet = transmission;
+        struct ExpressionNode *expression = (struct ExpressionNode *)calloc(1, sizeof(struct ExpressionNode));
 
-        int answer = readPacket(packet, NULL, NULL);
+        readPacket(packet, NULL, expression);
 
         free(transmission);
 
-        printf("%d", answer);
+        long answer = versionSum(expression);
+
+        freeExpression(expression);
+
+        printf("%ld", answer);
     }
 
     return 0;
