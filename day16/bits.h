@@ -216,9 +216,10 @@ void readPacket(char *packet, int *packetLength, struct ExpressionNode *node) {
 
     if (strchr(packet, '1')) {
         strncpy(versionBits, packet, 3);
-        strncpy(typeBits, packet + 3, 3);
+        packet += 3;
 
-        packet += 6;
+        strncpy(typeBits, packet, 3);
+        packet += 3;
 
         if (packetLength) {
             *packetLength += 6;
