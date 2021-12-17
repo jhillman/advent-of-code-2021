@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-enum ExpressionPartType {
+enum ExpressionNodeType {
     SUM,
     PRODUCT,
     MINIMUM,
@@ -18,63 +18,63 @@ enum OperatorLengthType {
     SUB_PACKET_COUNT
 };
 
-struct ExpressionPart {
-    enum ExpressionPartType type;
+struct ExpressionNode {
+    enum ExpressionNodeType type;
     long value;
 
-    struct ExpressionPart **parts;
-    int partCount;
+    struct ExpressionNode **nodes;
+    int nodeCount;
 };
 
-struct ExpressionPart *addPart(struct ExpressionPart *part) {
-    if (part) {
-        ++part->partCount;
+struct ExpressionNode *addNode(struct ExpressionNode *node) {
+    if (node) {
+        ++node->nodeCount;
 
-        if (part->partCount == 0) {
-            part->parts = (struct ExpressionPart **)malloc(sizeof(struct ExpressionPart *));
+        if (node->nodeCount == 0) {
+            node->nodes = (struct ExpressionNode **)malloc(sizeof(struct ExpressionNode *));
         } else {
-            part->parts = (struct ExpressionPart **)realloc(part->parts, part->partCount * sizeof(struct ExpressionPart *));
+            node->nodes = (struct ExpressionNode **)realloc(node->nodes, node->nodeCount * sizeof(struct ExpressionNode *));
         }
 
-        struct ExpressionPart *newPart = (struct ExpressionPart *)calloc(1, sizeof(struct ExpressionPart));
+        struct ExpressionNode *newNode = (struct ExpressionNode *)calloc(1, sizeof(struct ExpressionNode));
 
-        part->parts[part->partCount - 1] = newPart;
+        node->nodes[node->nodeCount - 1] = newNode;
 
-        return newPart;
+        return newNode;
     }
 
     return NULL;
 }
 
-void freeExpression(struct ExpressionPart *part) {
-    for (int i = 0; i < part->partCount; i++) {
-        freeExpression(part->parts[i]);
+void freeExpression(struct ExpressionNode *node) {
+    for (int i = 0; i < node->nodeCount; i++) {
+        freeExpression(node->nodes[i]);
     }
 
-    free(part);
+    free(node);
 }
 
-long evaluate(struct ExpressionPart *part) {
+long evaluate(struct ExpressionNode *node) {
     long result;
 
-    switch (part->type) {
+    switch (node->type) {
         case SUM:
             result = 0;
 
-            for (int i = 0; i < part->partCount; i++) {
-                result += evaluate(part->parts[i]);
+            for (int i = 0; i < node->nodeCount; i++) {
+                result += evaluate(node->nodes[i]);
             }
             break;
         case PRODUCT:
             result = 1;
 
-            for (int i = 0; i < part->partCount; i++) {
-                result *= evaluate(part->parts[i]);
+            for (int i = 0; i < node->nodeCount; i++) {
+                result *= evaluate(node->nodes[i]);
             }
             break;
         case MINIMUM:
-            for (int i = 0; i < part->partCount; i++) {
-                long value = evaluate(part->parts[i]);
+            for (int i = 0; i < node->nodeCount; i++) {
+                long value = evaluate(node->nodes[i]);
 
                 if (i == 0 || value < result) {
                     result = value;
@@ -82,8 +82,8 @@ long evaluate(struct ExpressionPart *part) {
             }
             break;
         case MAXIMUM:
-            for (int i = 0; i < part->partCount; i++) {
-                long value = evaluate(part->parts[i]);
+            for (int i = 0; i < node->nodeCount; i++) {
+                long value = evaluate(node->nodes[i]);
 
                 if (i == 0 || value > result) {
                     result = value;
@@ -91,16 +91,16 @@ long evaluate(struct ExpressionPart *part) {
             }
             break;
         case VALUE:
-            result = part->value;
+            result = node->value;
             break;
         case GREATER_THAN:
-            result = evaluate(part->parts[0]) > evaluate(part->parts[1]) ? 1 : 0;
+            result = evaluate(node->nodes[0]) > evaluate(node->nodes[1]) ? 1 : 0;
             break;
         case LESS_THAN:
-            result = evaluate(part->parts[0]) < evaluate(part->parts[1]) ? 1 : 0;
+            result = evaluate(node->nodes[0]) < evaluate(node->nodes[1]) ? 1 : 0;
             break;
         case EQUAL_TO:
-            result = evaluate(part->parts[0]) == evaluate(part->parts[1]) ? 1 : 0;
+            result = evaluate(node->nodes[0]) == evaluate(node->nodes[1]) ? 1 : 0;
             break;     
         default:
             break;       
@@ -109,7 +109,7 @@ long evaluate(struct ExpressionPart *part) {
     return result;
 }
 
-int readPacket(char *packet, int *packetLength, struct ExpressionPart *part);
+int readPacket(char *packet, int *packetLength, struct ExpressionNode *node);
 
 long toLong(char *bits) {
     long value = 0;
@@ -127,27 +127,27 @@ long toLong(char *bits) {
     return value;
 }
 
-void readValue(char *packet, int *packetLength, struct ExpressionPart *part) {
-    char *valuePart = packet;
+void readValue(char *packet, int *packetLength, struct ExpressionNode *node) {
+    char *valueNode = packet;
     char valueBits[65] = "";
 
     *packetLength += 5;
 
-    strncat(valueBits, valuePart + 1, 4);
+    strncat(valueBits, valueNode + 1, 4);
 
-    while (*valuePart != '0') {
-        valuePart += 5;
+    while (*valueNode != '0') {
+        valueNode += 5;
         *packetLength += 5;
 
-        strncat(valueBits, valuePart + 1, 4);
+        strncat(valueBits, valueNode + 1, 4);
     }
 
-    if (part) {
-        part->value = toLong(valueBits);
+    if (node) {
+        node->value = toLong(valueBits);
     }
 }
 
-int readOperator(char *packet, int *packetLength, struct ExpressionPart *part) {
+int readOperator(char *packet, int *packetLength, struct ExpressionNode *node) {
     enum OperatorLengthType lengthType = *packet - '0';
     int versionSum = 0;
     char subPacketInfoBits[16] = "";
@@ -169,9 +169,9 @@ int readOperator(char *packet, int *packetLength, struct ExpressionPart *part) {
             while (totalLength < subPacketsLength) {
                 int subPacketlength = 0;
 
-                struct ExpressionPart *operatorPart = addPart(part);
+                struct ExpressionNode *operatorNode = addNode(node);
 
-                versionSum += readPacket(packet, &subPacketlength, operatorPart);
+                versionSum += readPacket(packet, &subPacketlength, operatorNode);
                 packet += subPacketlength;
 
                 totalLength += subPacketlength;
@@ -190,9 +190,9 @@ int readOperator(char *packet, int *packetLength, struct ExpressionPart *part) {
             for (int i = 0; i < subPacketsCount; i++) {
                 int subPacketlength = 0;
 
-                struct ExpressionPart *operatorPart = addPart(part);
+                struct ExpressionNode *operatorNode = addNode(node);
 
-                versionSum += readPacket(packet, &subPacketlength, operatorPart);
+                versionSum += readPacket(packet, &subPacketlength, operatorNode);
     
                 packet += subPacketlength;
                 *packetLength += subPacketlength;
@@ -203,7 +203,7 @@ int readOperator(char *packet, int *packetLength, struct ExpressionPart *part) {
     return versionSum;
 }
 
-int readPacket(char *packet, int *packetLength, struct ExpressionPart *part) {
+int readPacket(char *packet, int *packetLength, struct ExpressionNode *node) {
     char versionBits[4] = "";
     char typeBits[4] = "";
     int length = 0;
@@ -220,24 +220,24 @@ int readPacket(char *packet, int *packetLength, struct ExpressionPart *part) {
         }
 
         int version = toLong(versionBits);
-        enum ExpressionPartType type = toLong(typeBits);
+        enum ExpressionNodeType type = toLong(typeBits);
 
         versionSum += version;
 
-        if (part) {
-            part->type = type;
+        if (node) {
+            node->type = type;
         }
 
         switch (type) {
             case VALUE:
-                readValue(packet, &length, part);
+                readValue(packet, &length, node);
 
                 if (packetLength) {
                     *packetLength += length;
                 }
                 break;
             default:
-                versionSum += readOperator(packet, &length, part);
+                versionSum += readOperator(packet, &length, node);
 
                 if (packetLength) {
                     *packetLength += length;

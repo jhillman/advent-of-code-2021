@@ -7,7 +7,7 @@ int main() {
 
     if (transmission) {
         char *packet = transmission;
-        struct ExpressionPart *expression = (struct ExpressionPart *)calloc(1, sizeof(struct ExpressionPart));
+        struct ExpressionNode *expression = (struct ExpressionNode *)calloc(1, sizeof(struct ExpressionNode));
 
         readPacket(packet, NULL, expression);
 
