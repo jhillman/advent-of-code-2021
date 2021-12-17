@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-enum PacketType {
+enum ExpressionPartType {
     SUM,
     PRODUCT,
     MINIMUM,
@@ -18,43 +18,103 @@ enum OperatorLengthType {
     SUB_PACKET_COUNT
 };
 
-struct Expression {
-    enum PacketType type;
+struct ExpressionPart {
+    enum ExpressionPartType type;
     long value;
+
+    struct ExpressionPart **parts;
+    int partCount;
 };
 
-struct ExpressionStack {
-    struct Expression *data;
-    int size;
-    int capacity;
-};
+struct ExpressionPart *addPart(struct ExpressionPart *part) {
+    if (part) {
+        ++part->partCount;
 
-void pushExpression(struct ExpressionStack *stack, struct Expression expression) {
-    if (stack->capacity == 0) {
-        stack->capacity = 5;
-        stack->data = (struct Expression *)malloc(stack->capacity * sizeof(struct Expression));
-    } else if (stack->size == stack->capacity) {
-        stack->capacity += 5;
-        stack->data = (struct Expression *)realloc(stack->data, stack->capacity * sizeof(struct Expression));
+        if (part->partCount == 0) {
+            part->parts = (struct ExpressionPart **)malloc(sizeof(struct ExpressionPart *));
+        } else {
+            part->parts = (struct ExpressionPart **)realloc(part->parts, part->partCount * sizeof(struct ExpressionPart *));
+        }
+
+        struct ExpressionPart *newPart = (struct ExpressionPart *)calloc(1, sizeof(struct ExpressionPart));
+
+        part->parts[part->partCount - 1] = newPart;
+
+        return newPart;
     }
 
-    stack->data[stack->size++] = expression;
+    return NULL;
 }
 
-struct Expression popExpression(struct ExpressionStack *stack) {
-    struct Expression expression = stack->data[stack->size - 1];
+void freeExpression(struct ExpressionPart *part) {
+    for (int i = 0; i < part->partCount; i++) {
+        freeExpression(part->parts[i]);
+    }
 
-    --stack->size;
-
-    return expression;
+    free(part);
 }
 
-int readPacket(char *packet, int *packetLength);
+long evaluate(struct ExpressionPart *part) {
+    long result;
 
-int toInt(char *bits) {
-    int value = 0;
+    switch (part->type) {
+        case SUM:
+            result = 0;
 
-    int bitValue = 1 << (strlen(bits) - 1);
+            for (int i = 0; i < part->partCount; i++) {
+                result += evaluate(part->parts[i]);
+            }
+            break;
+        case PRODUCT:
+            result = 1;
+
+            for (int i = 0; i < part->partCount; i++) {
+                result *= evaluate(part->parts[i]);
+            }
+            break;
+        case MINIMUM:
+            for (int i = 0; i < part->partCount; i++) {
+                long value = evaluate(part->parts[i]);
+
+                if (i == 0 || value < result) {
+                    result = value;
+                }
+            }
+            break;
+        case MAXIMUM:
+            for (int i = 0; i < part->partCount; i++) {
+                long value = evaluate(part->parts[i]);
+
+                if (i == 0 || value > result) {
+                    result = value;
+                }
+            }
+            break;
+        case VALUE:
+            result = part->value;
+            break;
+        case GREATER_THAN:
+            result = evaluate(part->parts[0]) > evaluate(part->parts[1]) ? 1 : 0;
+            break;
+        case LESS_THAN:
+            result = evaluate(part->parts[0]) < evaluate(part->parts[1]) ? 1 : 0;
+            break;
+        case EQUAL_TO:
+            result = evaluate(part->parts[0]) == evaluate(part->parts[1]) ? 1 : 0;
+            break;     
+        default:
+            break;       
+    }
+
+    return result;
+}
+
+int readPacket(char *packet, int *packetLength, struct ExpressionPart *part);
+
+long toLong(char *bits) {
+    long value = 0;
+
+    long bitValue = 1L << (strlen(bits) - 1);
     char *bit = bits;
 
     while (*bit) {
@@ -67,7 +127,7 @@ int toInt(char *bits) {
     return value;
 }
 
-int readValue(char *packet, int *packetLength) {
+void readValue(char *packet, int *packetLength, struct ExpressionPart *part) {
     char *valuePart = packet;
     char valueBits[65] = "";
 
@@ -82,10 +142,12 @@ int readValue(char *packet, int *packetLength) {
         strncat(valueBits, valuePart + 1, 4);
     }
 
-    return toInt(valueBits);
+    if (part) {
+        part->value = toLong(valueBits);
+    }
 }
 
-int readOperator(char *packet, int *packetLength) {
+int readOperator(char *packet, int *packetLength, struct ExpressionPart *part) {
     enum OperatorLengthType lengthType = *packet - '0';
     int versionSum = 0;
     char subPacketInfoBits[16] = "";
@@ -97,7 +159,7 @@ int readOperator(char *packet, int *packetLength) {
         case SUB_PACKET_LENGTH:
             strncpy(subPacketInfoBits, packet, 15);
 
-            int subPacketsLength = toInt(subPacketInfoBits);
+            long subPacketsLength = toLong(subPacketInfoBits);
         
             packet += 15;
             *packetLength += 15;
@@ -107,7 +169,9 @@ int readOperator(char *packet, int *packetLength) {
             while (totalLength < subPacketsLength) {
                 int subPacketlength = 0;
 
-                versionSum += readPacket(packet, &subPacketlength);
+                struct ExpressionPart *operatorPart = addPart(part);
+
+                versionSum += readPacket(packet, &subPacketlength, operatorPart);
                 packet += subPacketlength;
 
                 totalLength += subPacketlength;
@@ -118,7 +182,7 @@ int readOperator(char *packet, int *packetLength) {
         case SUB_PACKET_COUNT:
             strncpy(subPacketInfoBits, packet, 11);
 
-            int subPacketsCount = toInt(subPacketInfoBits);
+            long subPacketsCount = toLong(subPacketInfoBits);
 
             packet += 11;
             *packetLength += 11;
@@ -126,7 +190,9 @@ int readOperator(char *packet, int *packetLength) {
             for (int i = 0; i < subPacketsCount; i++) {
                 int subPacketlength = 0;
 
-                versionSum += readPacket(packet, &subPacketlength);
+                struct ExpressionPart *operatorPart = addPart(part);
+
+                versionSum += readPacket(packet, &subPacketlength, operatorPart);
     
                 packet += subPacketlength;
                 *packetLength += subPacketlength;
@@ -137,7 +203,7 @@ int readOperator(char *packet, int *packetLength) {
     return versionSum;
 }
 
-int readPacket(char *packet, int *packetLength) {
+int readPacket(char *packet, int *packetLength, struct ExpressionPart *part) {
     char versionBits[4] = "";
     char typeBits[4] = "";
     int length = 0;
@@ -148,23 +214,34 @@ int readPacket(char *packet, int *packetLength) {
         strncpy(typeBits, packet + 3, 3);
 
         packet += 6;
-        *packetLength += 6;
 
-        int version = toInt(versionBits);
-        enum PacketType type = toInt(typeBits);
+        if (packetLength) {
+            *packetLength += 6;
+        }
+
+        int version = toLong(versionBits);
+        enum ExpressionPartType type = toLong(typeBits);
 
         versionSum += version;
 
+        if (part) {
+            part->type = type;
+        }
+
         switch (type) {
             case VALUE:
-                readValue(packet, &length);
+                readValue(packet, &length, part);
 
-                *packetLength += length;
+                if (packetLength) {
+                    *packetLength += length;
+                }
                 break;
             default:
-                versionSum += readOperator(packet, &length);
+                versionSum += readOperator(packet, &length, part);
 
-                *packetLength += length;
+                if (packetLength) {
+                    *packetLength += length;
+                }
                 break;
         }
     }
@@ -197,7 +274,6 @@ char *getTransmission() {
         char hex;
         int transmissionLength = 32;
         char *transmission = (char *)malloc(transmissionLength * sizeof(char));
-        int answer = 0;
 
         strcpy(transmission, "");
 

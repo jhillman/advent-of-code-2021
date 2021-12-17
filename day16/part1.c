@@ -7,9 +7,8 @@ int main() {
 
     if (transmission) {
         char *packet = transmission;
-        int length = 0;
 
-        int answer = readPacket(packet, &length);
+        int answer = readPacket(packet, NULL, NULL);
 
         free(transmission);
 

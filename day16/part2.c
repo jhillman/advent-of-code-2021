@@ -1,4 +1,4 @@
-/* Day 16, part 2 = ? */
+/* Day 16, part 2 = 246761930504 */
 
 #include "bits.h"
 
@@ -7,13 +7,17 @@ int main() {
 
     if (transmission) {
         char *packet = transmission;
-        int length = 0;
+        struct ExpressionPart *expression = (struct ExpressionPart *)calloc(1, sizeof(struct ExpressionPart));
 
-        int answer = readPacket(packet, &length);
+        readPacket(packet, NULL, expression);
 
         free(transmission);
 
-        printf("%d", answer);
+        long answer = evaluate(expression);
+
+        freeExpression(expression);
+
+        printf("%ld", answer);
     }
 
     return 0;
