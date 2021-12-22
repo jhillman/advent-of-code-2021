@@ -11,24 +11,12 @@ struct Coordinates {
     int z;
 };
 
-struct Coordinates vector(struct Coordinates first, struct Coordinates second) {
-    return (struct Coordinates){ second.x - first.x, second.y - first.y, second.z - first.z };
-}
-
-bool equal(struct Coordinates first, struct Coordinates second) {
-    return first.x == second.x && first.y == second.y && first.z == second.z;
-}
-
 struct Coordinates empty() {
     return (struct Coordinates){ EMPTY, EMPTY, EMPTY };
 }
 
-bool isEmpty(struct Coordinates coordinates) {
-    return coordinates.x == EMPTY && coordinates.y == EMPTY && coordinates.z == EMPTY;
-}
-
-struct Coordinates translate(struct Coordinates coordinates, struct Coordinates translation) {
-    return (struct Coordinates){ coordinates.x + translation.x, coordinates.y + translation.y, coordinates.z + translation.z };
+struct Coordinates vector(struct Coordinates first, struct Coordinates second) {
+    return (struct Coordinates){ second.x - first.x, second.y - first.y, second.z - first.z };
 }
 
 bool lessThan(struct Coordinates first, struct Coordinates second) {
@@ -39,6 +27,18 @@ bool lessThan(struct Coordinates first, struct Coordinates second) {
     } else {
         return first.x < second.x;
     }
+}
+
+bool equal(struct Coordinates first, struct Coordinates second) {
+    return first.x == second.x && first.y == second.y && first.z == second.z;
+}
+
+bool isEmpty(struct Coordinates coordinates) {
+    return coordinates.x == EMPTY && coordinates.y == EMPTY && coordinates.z == EMPTY;
+}
+
+struct Coordinates translate(struct Coordinates coordinates, struct Coordinates translation) {
+    return (struct Coordinates){ coordinates.x + translation.x, coordinates.y + translation.y, coordinates.z + translation.z };
 }
 
 int distance(struct Coordinates first, struct Coordinates second) {
