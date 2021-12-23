@@ -1,17 +1,9 @@
-/* Day 20, part 2 = ? */
+/* Day 20, part 2 = 19156 */
 
-#include <stdio.h>
+#include "image.h"
 
 int main() {
-    FILE *inputFile = fopen("input.txt", "r");
-
-    if (inputFile) {
-        int answer = 0;
-
-        fclose(inputFile);
-
-        printf("%d", answer);
-    }
+    printf("%d", enhance(50));
 
     return 0;
 }
