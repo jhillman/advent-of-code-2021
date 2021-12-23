@@ -15,35 +15,28 @@ int enhance(int steps) {
 
     if (inputFile) {
         char enhancementAlgorithm[516];
+        char c;
         int imageWidth = 0;
         int imageHeight = 0;
         int expandedImageWidth;
         int expandedImageHeight;
         char **inputImage;
         char **outputImage;
-        int c;
-        int answer = 0;
 
         fgets(enhancementAlgorithm, sizeof(enhancementAlgorithm), inputFile);
         fgetc(inputFile); // \n
 
-        c = fgetc(inputFile);
+        do {
+            c = fgetc(inputFile);
 
-        while (!feof(inputFile)) {
-            if (c == '\n') {
+            if (c == '\n' || feof(inputFile)) {
                 ++imageHeight;
             }
 
             if (!imageHeight) {
                 ++imageWidth;
             }
-
-            c = fgetc(inputFile);
-
-            if (feof(inputFile)) {
-                ++imageHeight;
-            }
-        }
+        } while (!feof(inputFile));
 
         fseek(inputFile, 0, SEEK_SET);
 
@@ -122,9 +115,11 @@ int enhance(int steps) {
             }
 
             free(inputImage[y]);
+            free(outputImage[y]);
         }
 
         free(inputImage);
+        free(outputImage);
     }
 
     return litPixels;
