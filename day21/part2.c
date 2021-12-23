@@ -73,7 +73,6 @@ struct GameWins play(struct GameTurn lastTurn, struct GameWins cachedWins[11][11
     }
 
     cachedWins[lastTurn.playerOnePosition][lastTurn.playerTwoPosition][lastTurn.playerOneScore][lastTurn.playerTwoScore][lastTurn.playerOneTurn ? 0 : 1] = wins;
-    cachedWins[lastTurn.playerTwoPosition][lastTurn.playerOnePosition][lastTurn.playerTwoScore][lastTurn.playerOneScore][lastTurn.playerOneTurn ? 1 : 0] = (struct GameWins){ wins.playerTwo, wins.playerOne };
 
     return wins;
 }
