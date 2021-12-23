@@ -39,17 +39,13 @@ struct GameWins play(struct GameTurn lastTurn, struct GameWins cachedWins[11][11
                 };
 
                 if (currentTurn.playerOneTurn) {
-                    currentTurn.playerOnePosition = (currentTurn.playerOnePosition + diceTotal) % 10;
-
-                    if (currentTurn.playerOnePosition == 0) {
+                    if ((currentTurn.playerOnePosition = (currentTurn.playerOnePosition + diceTotal) % 10) == 0) {
                         currentTurn.playerOnePosition = 10;
                     }
 
                     currentTurn.playerOneScore += currentTurn.playerOnePosition;
                 } else {
-                    currentTurn.playerTwoPosition = (currentTurn.playerTwoPosition + diceTotal) % 10;
-
-                    if (currentTurn.playerTwoPosition == 0) {
+                    if ((currentTurn.playerTwoPosition = (currentTurn.playerTwoPosition + diceTotal) % 10) == 0) {
                         currentTurn.playerTwoPosition = 10;
                     }
 
