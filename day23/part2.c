@@ -1,4 +1,4 @@
-/* Day 23, part 2 = ? */
+/* Day 23, part 2 = 52358 */
 
 #define ROOM_DEPTH 4
 
