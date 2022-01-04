@@ -3,6 +3,12 @@
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
+#include <limits.h>
+
+#define max(a,b) ((a) > (b) ? (a) : (b))
+#define min(a,b) ((a) < (b) ? (a) : (b))
+
+#define HALLWAY_LENGTH 11
 
 struct Room {
     int hallwayPosition;
@@ -10,28 +16,8 @@ struct Room {
     char amphipods[ROOM_DEPTH];
 };
 
-bool roomAvailable(struct Room room) {
-    bool available = *room.amphipods == '.';
-
-    for (int i = 1; available && i < ROOM_DEPTH; i++) {
-        available = room.amphipods[i] == '.' || room.amphipods[i] == room.amphipod;
-    }
-
-    return available;
-}
-
-bool roomHasAmphipodsToMove(struct Room room) {
-    for (int i = 0; i < ROOM_DEPTH; i++) {
-        if (isalpha(room.amphipods[i]) && room.amphipods[i] != room.amphipod) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 struct Burrow {
-    char hallway[11];
+    char hallway[HALLWAY_LENGTH];
     struct Room aRoom;
     struct Room bRoom;
     struct Room cRoom;
@@ -40,36 +26,47 @@ struct Burrow {
 
 void printBurrow(struct Burrow *burrow) {
     printf("#############\n");
-    printf("#");
 
-    for (int i = 0; i < 11; i++) {
+    printf("#");
+    for (int i = 0; i < HALLWAY_LENGTH; i++) {
         printf("%c", burrow->hallway[i]);
     }
-
     printf("#\n");
 
     for (int i = 0; i < ROOM_DEPTH; i++) {
-        printf("%s#%c#%c#%c#%c#%s\n", i == 0 ? "##" : "  ", burrow->aRoom.amphipods[i], burrow->bRoom.amphipods[i], burrow->cRoom.amphipods[i], burrow->dRoom.amphipods[i], i == 0 ? "##" : "  ");
+        printf("%s#%c#%c#%c#%c#%s\n", i == 0 ? "##" : "  ", 
+            burrow->aRoom.amphipods[i], 
+            burrow->bRoom.amphipods[i], 
+            burrow->cRoom.amphipods[i], 
+            burrow->dRoom.amphipods[i], i == 0 ? "##" : "  ");
     }
 
     printf("  #########  \n\n");
 }
 
-bool burrowsEqual(struct Burrow *first, struct Burrow *second) {
-    return strncmp(first->hallway, second->hallway, 11) == 0 &&
-        strncmp(first->aRoom.amphipods, second->aRoom.amphipods, ROOM_DEPTH) == 0 &&
-        strncmp(first->bRoom.amphipods, second->bRoom.amphipods, ROOM_DEPTH) == 0 &&
-        strncmp(first->cRoom.amphipods, second->cRoom.amphipods, ROOM_DEPTH) == 0 &&
-        strncmp(first->dRoom.amphipods, second->dRoom.amphipods, ROOM_DEPTH) == 0;
+struct Room *roomForAmphipod(struct Burrow *burrow, char amphipod) {
+    struct Room *room;
+
+    switch (amphipod) {
+        case 'A':
+            room = &burrow->aRoom;
+            break;
+        case 'B':
+            room = &burrow->bRoom;
+            break;
+        case 'C':
+            room = &burrow->cRoom;
+            break;
+        case 'D':
+            room = &burrow->dRoom;
+            break;
+    }
+
+    return room;
 }
 
-struct BurrowState {
-    struct Burrow burrow;
-    int energy;
-};
-
 int compareBurrows(struct Burrow *first, struct Burrow *second) {
-    int result = result = strncmp(first->hallway, second->hallway, 11);
+    int result = result = strncmp(first->hallway, second->hallway, HALLWAY_LENGTH);
 
     if (result == 0) {
         result = strncmp(first->aRoom.amphipods, second->aRoom.amphipods, ROOM_DEPTH);
@@ -90,6 +87,41 @@ int compareBurrows(struct Burrow *first, struct Burrow *second) {
     return result;
 }
 
+bool burrowsEqual(struct Burrow *first, struct Burrow *second) {
+    return compareBurrows(first, second) == 0;
+}
+
+unsigned int burrowHash(struct Burrow *burrow) {
+    unsigned int hash = 0;
+
+    for (int i = 0; i < HALLWAY_LENGTH; i++) {
+        hash = (hash << 3) + (hash >> (sizeof(hash) * CHAR_BIT - 3)) + (unsigned int)burrow->hallway[i];
+    }
+
+    for (int i = 0; i < ROOM_DEPTH; i++) {
+        hash = (hash << 3) + (hash >> (sizeof(hash) * CHAR_BIT - 3)) + (unsigned int)burrow->aRoom.amphipods[i];
+    }
+
+    for (int i = 0; i < ROOM_DEPTH; i++) {
+        hash = (hash << 3) + (hash >> (sizeof(hash) * CHAR_BIT - 3)) + (unsigned int)burrow->bRoom.amphipods[i];
+    }
+
+    for (int i = 0; i < ROOM_DEPTH; i++) {
+        hash = (hash << 3) + (hash >> (sizeof(hash) * CHAR_BIT - 3)) + (unsigned int)burrow->cRoom.amphipods[i];
+    }
+
+    for (int i = 0; i < ROOM_DEPTH; i++) {
+        hash = (hash << 3) + (hash >> (sizeof(hash) * CHAR_BIT - 3)) + (unsigned int)burrow->dRoom.amphipods[i];
+    }
+
+    return hash;
+}
+
+struct BurrowState {
+    struct Burrow burrow;
+    int energy;
+};
+
 int compare(const void *a, const void *b) {
     struct BurrowState *first = *(struct BurrowState **)a;
     struct BurrowState *second = *(struct BurrowState **)b;
@@ -97,15 +129,15 @@ int compare(const void *a, const void *b) {
     return compareBurrows(&first->burrow, &second->burrow);
 }
 
-void swap(struct BurrowState *a, struct BurrowState *b) {
-    struct BurrowState temp = *b;
+void swap(struct BurrowState **a, struct BurrowState **b) {
+    struct BurrowState *temp = *b;
 
     *b = *a;
     *a = temp;
 }   
 
 struct BurrowStateQueue {
-    struct BurrowState *data;
+    struct BurrowState **data;
     int capacity;
     int size;
 };
@@ -116,11 +148,11 @@ void heapify(struct BurrowStateQueue *queue, int index) {
         int left = 2 * index + 1;
         int right = 2 * index + 2;
 
-        if (left < queue->size && queue->data[left].energy < queue->data[smallest].energy) {
+        if (left < queue->size && queue->data[left]->energy < queue->data[smallest]->energy) {
             smallest = left;
         }
 
-        if (right < queue->size && queue->data[right].energy < queue->data[smallest].energy) {
+        if (right < queue->size && queue->data[right]->energy < queue->data[smallest]->energy) {
             smallest = right;
         }
 
@@ -131,13 +163,13 @@ void heapify(struct BurrowStateQueue *queue, int index) {
     }
 }
 
-void enqueueBurrowState(struct BurrowStateQueue *queue, struct BurrowState burrowState) {
+void enqueueBurrowState(struct BurrowStateQueue *queue, struct BurrowState *burrowState) {
     if (queue->capacity == 0) {
-        queue->capacity = 1000;
-        queue->data = (struct BurrowState *)malloc(queue->capacity * sizeof(struct BurrowState));
+        queue->capacity = 10000;
+        queue->data = (struct BurrowState **)malloc(queue->capacity * sizeof(struct BurrowState *));
     } else if (queue->size == queue->capacity) {
-        queue->capacity += 1000;
-        queue->data = (struct BurrowState *)realloc(queue->data, queue->capacity * sizeof(struct BurrowState));
+        queue->capacity += 10000;
+        queue->data = (struct BurrowState **)realloc(queue->data, queue->capacity * sizeof(struct BurrowState *));
     }
 
     queue->data[queue->size++] = burrowState;
@@ -147,12 +179,12 @@ void enqueueBurrowState(struct BurrowStateQueue *queue, struct BurrowState burro
     }
 }
 
-struct BurrowState dequeueBurrowState(struct BurrowStateQueue *queue) {
-    struct BurrowState burrowState = *queue->data;
+struct BurrowState *dequeueBurrowState(struct BurrowStateQueue *queue) {
+    struct BurrowState *burrowState = *queue->data;
 
     --queue->size;
 
-    memcpy(queue->data, queue->data + 1, queue->size * sizeof(struct BurrowState));
+    memcpy(queue->data, queue->data + 1, queue->size * sizeof(struct BurrowState *));
 
     for (int i = queue->size / 2 - 1; i >= 0; i--) {
         heapify(queue, i);
@@ -161,101 +193,41 @@ struct BurrowState dequeueBurrowState(struct BurrowStateQueue *queue) {
     return burrowState;
 }
 
-struct BurrowStateList {
-    struct BurrowState **data;
-    int capacity;
-    int size;
-};
+bool roomAvailable(struct Room *room) {
+    bool available = *room->amphipods == '.';
 
-struct BurrowState *binarySearchBurrowStates(struct BurrowState **burrowStates, struct Burrow *burrow, int low, int high) {
-    if (low > high) {
-        return NULL;
+    for (int i = 1; available && i < ROOM_DEPTH; i++) {
+        available = room->amphipods[i] == '.' || room->amphipods[i] == room->amphipod;
     }
 
-    int middle = low + ((high - low) / 2);
-
-    if (burrowsEqual(burrow, &burrowStates[middle]->burrow)) {
-        return burrowStates[middle];
-    } else if (compareBurrows(burrow, &burrowStates[middle]->burrow) < 0) {
-        return binarySearchBurrowStates(burrowStates, burrow, low, middle - 1);
-    } else {
-        return binarySearchBurrowStates(burrowStates, burrow, middle + 1, high);
-    }
+    return available;
 }
 
-struct BurrowState *findBurrowState(struct BurrowStateList *burrowStates, struct Burrow *burrow) {
-    return binarySearchBurrowStates(burrowStates->data, burrow, 0, burrowStates->size - 1);
-}
-
-void addBurrowState(struct BurrowStateList *list, struct BurrowState *burrowState) {
-    if (list->capacity == 0) {
-        list->capacity = 1000;
-
-        list->data = (struct BurrowState **)malloc(list->capacity * sizeof(struct BurrowState *));
-    } else if (list->size == list->capacity) {
-        list->capacity += 1000;
-
-        list->data = (struct BurrowState **)realloc(list->data, list->capacity * sizeof(struct BurrowState *));
+bool roomHasAmphipodsToMove(struct Room *room) {
+    for (int i = 0; i < ROOM_DEPTH; i++) {
+        if (isalpha(room->amphipods[i]) && room->amphipods[i] != room->amphipod) {
+            return true;
+        }
     }
 
-    list->data[list->size++] = burrowState;
-
-    qsort(list->data, list->size, sizeof(struct BurrowState *), compare);
+    return false;
 }
 
-bool burrowHallwayPathClear(struct Burrow *burrow, int start, int end) {
+bool burrowHallwayPathClear(char *hallway, int start, int end) {
     bool clear = true;
-    char *space = burrow->hallway + start;
+    char *space = hallway + start;
 
     if (start < end) {
-        while (clear && ++space <= burrow->hallway + end) {
+        while (clear && ++space <= hallway + end) {
             clear = *space == '.';
         }
     } else {
-        while (clear && --space >= burrow->hallway + end) {
+        while (clear && --space >= hallway + end) {
             clear = *space == '.';
         }
     }
 
     return clear;
-}
-
-struct Room roomForAmphipod(struct Burrow *burrow, char amphipod) {
-    struct Room room;
-
-    switch (amphipod) {
-        case 'A':
-            room = burrow->aRoom;
-            break;
-        case 'B':
-            room = burrow->bRoom;
-            break;
-        case 'C':
-            room = burrow->cRoom;
-            break;
-        case 'D':
-            room = burrow->dRoom;
-            break;
-    }
-
-    return room;
-}
-
-void updateRoom(struct Burrow *burrow, struct Room room) {
-    switch (room.amphipod) {
-        case 'A':
-            burrow->aRoom = room;
-            break;
-        case 'B':
-            burrow->bRoom = room;
-            break;
-        case 'C':
-            burrow->cRoom = room;
-            break;
-        case 'D':
-            burrow->dRoom = room;
-            break;
-    }
 }
 
 int organizeBurrow(struct Burrow original) {
@@ -278,113 +250,167 @@ int organizeBurrow(struct Burrow original) {
     char amphipods[] = "ABCD";
     int amphipodEnergy[] = { 1, 10, 100, 1000 };
 
-    struct BurrowStateList *burrowStateCosts = (struct BurrowStateList *)calloc(1, sizeof(struct BurrowStateList));
+    int *burrowStateCosts = (int *)calloc(5000000000, sizeof(int));
 
     int energy = 0;
 
-    enqueueBurrowState(burrowStateQueue, (struct BurrowState){ original, 0 });
+    struct BurrowState *burrowState = (struct BurrowState *)calloc(1, sizeof(struct BurrowState));
+    burrowState->burrow = original;
+    burrowState->energy = 0;
+
+    enqueueBurrowState(burrowStateQueue, burrowState);
+
+    int printCount = 0;
 
     while (burrowStateQueue->size) {
-        struct BurrowState burrowState = dequeueBurrowState(burrowStateQueue);
+        struct BurrowState *burrowState = dequeueBurrowState(burrowStateQueue);
 
-        struct Burrow burrow = burrowState.burrow;
+        struct Burrow *burrow = &burrowState->burrow;
 
-        if (burrowsEqual(&burrow, &organized)) {
-            energy = burrowState.energy;
+        if (burrowsEqual(burrow, &organized)) {
+            energy = burrowState->energy;
+
+            free(burrowState);
+
             break;
         }
 
         // move amphipods in hallway into their rooms
-        for (int i = 0; i < 11; i++) {
-            if (isalpha(burrow.hallway[i])) {
-                char amphipod = burrow.hallway[i];
-                struct Room room = roomForAmphipod(&burrow, amphipod);
+        for (int i = 0; i < HALLWAY_LENGTH; i++) {
+            if (isalpha(burrow->hallway[i])) {
+                char amphipod = burrow->hallway[i];
+                struct Room *room = roomForAmphipod(burrow, amphipod);
 
-                if (roomAvailable(room) && burrowHallwayPathClear(&burrow, i, room.hallwayPosition)) {
-                    int roomPosition = strrchr(room.amphipods, '.') - room.amphipods;
+                if (roomAvailable(room) && burrowHallwayPathClear(burrow->hallway, i, room->hallwayPosition)) {
+                    int roomPosition = 0;
+
+                    while (room->amphipods[roomPosition + 1] == '.' && roomPosition < ROOM_DEPTH - 1) {
+                        ++roomPosition;
+                    }
+
                     int stepsIntoRoom = roomPosition + 1;
-                    int energy = burrowState.energy + 
-                        (abs(i - room.hallwayPosition) + stepsIntoRoom) * amphipodEnergy[amphipod - 'A'];
+                    int energy = burrowState->energy + 
+                        (abs(i - room->hallwayPosition) + stepsIntoRoom) * amphipodEnergy[amphipod - 'A'];
 
-                    struct Burrow newBurrow = burrow;
-
+                    struct Burrow newBurrow = *burrow;
                     newBurrow.hallway[i] = '.';
 
-                    struct Room newRoom = room;
-                    newRoom.amphipods[roomPosition] = newRoom.amphipod;
+                    roomForAmphipod(&newBurrow, room->amphipod)->amphipods[roomPosition] = room->amphipod;
 
-                    updateRoom(&newBurrow, newRoom);
+                    unsigned int hash = burrowHash(&newBurrow);
 
-                    struct BurrowState *newBurrowState = findBurrowState(burrowStateCosts, &newBurrow);
-
-                    if (newBurrowState == NULL) {
-                        newBurrowState = (struct BurrowState *)calloc(1, sizeof(struct BurrowState));
-
+                    if (burrowStateCosts[hash] == 0 || energy < burrowStateCosts[hash]) {
+                        struct BurrowState *newBurrowState = (struct BurrowState *)calloc(1, sizeof(struct BurrowState));
                         newBurrowState->burrow = newBurrow;
                         newBurrowState->energy = energy;
 
-                        addBurrowState(burrowStateCosts, newBurrowState);
-                        enqueueBurrowState(burrowStateQueue, *newBurrowState);
-                    } else if (energy < newBurrowState->energy) {
-                        newBurrowState->energy = energy;
+                        burrowStateCosts[hash] = energy;
 
-                        enqueueBurrowState(burrowStateQueue, *newBurrowState);
+                        enqueueBurrowState(burrowStateQueue, newBurrowState);
                     }
                 }
             }
         }
 
-        // move amphipods in wrong rooms into the hallway
+        // move amphipods in wrong rooms into correct rooms or into the hallway
         for (int i = 0; i < 4; i++) {
-            struct Room room = roomForAmphipod(&burrow, amphipods[i]);
+            struct Room *room = roomForAmphipod(burrow, amphipods[i]);
 
             if (roomHasAmphipodsToMove(room)) {
-                for (int j = 0; j < 11; j++) {
-                    if ((j == 0 || j == 10 || j % 2 == 1) && burrow.hallway[j] == '.' && burrowHallwayPathClear(&burrow, j, room.hallwayPosition)) {
-                        char *roomPosition = room.amphipods;
+                char *roomPosition = room->amphipods;
 
-                        while (*roomPosition == '.') {
-                            ++roomPosition;
-                        }
+                while (*roomPosition == '.') {
+                    ++roomPosition;
+                }
 
-                        int amphipodPosition = roomPosition - room.amphipods;
-                        char amphipod = *roomPosition;
-                        int stepsOutOfRoom = amphipodPosition + 1;
-                        int energy = burrowState.energy + 
-                            (abs(room.hallwayPosition - j) + stepsOutOfRoom) * amphipodEnergy[amphipod - 'A'];
+                int amphipodPosition = roomPosition - room->amphipods;
+                char amphipod = *roomPosition;
+                int stepsOutOfRoom = amphipodPosition + 1;
 
-                        struct Burrow newBurrow = burrow;
+                struct Room *destinationRoom = roomForAmphipod(burrow, amphipod);
 
-                        newBurrow.hallway[j] = amphipod;
+                if (roomAvailable(destinationRoom) && burrowHallwayPathClear(burrow->hallway, room->hallwayPosition, destinationRoom->hallwayPosition)) {
+                    struct Burrow newBurrow = *burrow;
 
-                        struct Room newRoom = room;
-                        newRoom.amphipods[amphipodPosition] = '.';
+                    int roomPosition = 0;
 
-                        updateRoom(&newBurrow, newRoom);
+                    while (destinationRoom->amphipods[roomPosition + 1] == '.' && roomPosition < ROOM_DEPTH - 1) {
+                        ++roomPosition;
+                    }
 
-                        struct BurrowState *newBurrowState = findBurrowState(burrowStateCosts, &newBurrow);
+                    int stepsIntoRoom = roomPosition + 1;
 
-                        if (newBurrowState == NULL) {
-                            newBurrowState = (struct BurrowState *)calloc(1, sizeof(struct BurrowState));
+                    roomForAmphipod(&newBurrow, room->amphipod)->amphipods[amphipodPosition] = '.';
+                    roomForAmphipod(&newBurrow, destinationRoom->amphipod)->amphipods[roomPosition] = destinationRoom->amphipod;
 
-                            newBurrowState->burrow = newBurrow;
-                            newBurrowState->energy = energy;
+                    int energy = burrowState->energy + 
+                        (stepsOutOfRoom + abs(room->hallwayPosition - destinationRoom->hallwayPosition) + stepsIntoRoom) * amphipodEnergy[amphipod - 'A'];
 
-                            addBurrowState(burrowStateCosts, newBurrowState);
-                            enqueueBurrowState(burrowStateQueue, *newBurrowState);
-                        } else if (energy < newBurrowState->energy) {
-                            newBurrowState->energy = energy;
+                    unsigned int hash = burrowHash(&newBurrow);
 
-                            enqueueBurrowState(burrowStateQueue, *newBurrowState);
+                    if (burrowStateCosts[hash] == 0 || energy < burrowStateCosts[hash]) {
+                        struct BurrowState *newBurrowState = (struct BurrowState *)calloc(1, sizeof(struct BurrowState));
+                        newBurrowState->burrow = newBurrow;
+                        newBurrowState->energy = energy;
+
+                        burrowStateCosts[hash] = energy;
+
+                        enqueueBurrowState(burrowStateQueue, newBurrowState);
+                    }
+                } else {
+                    for (int j = 0; j < HALLWAY_LENGTH; j++) {
+                        if ((j == 0 || j == 10 || j % 2 == 1) && burrow->hallway[j] == '.' && burrowHallwayPathClear(burrow->hallway, j, room->hallwayPosition)) {
+                            struct Burrow newBurrow = *burrow;
+                            newBurrow.hallway[j] = amphipod;
+
+                            int movingAmphipodHallwayPosition = roomForAmphipod(&newBurrow, amphipod)->hallwayPosition;
+
+                            roomForAmphipod(&newBurrow, room->amphipod)->amphipods[amphipodPosition] = '.';
+
+                            bool hallwayPositionValid = true;
+
+                            // see if the recently moved amphipod is blocking another amphipod from going to its room and vice versa
+                            for (int k = 0; hallwayPositionValid && k < HALLWAY_LENGTH; k++) {
+                                if (k != j && isalpha(newBurrow.hallway[k]) && newBurrow.hallway[k] != amphipod) {
+                                    char hallwayAmphipod = newBurrow.hallway[k];
+                                    int hallwayAmphipodHallwayPosition = roomForAmphipod(&newBurrow, hallwayAmphipod)->hallwayPosition;
+                                    int minHallwayPosition = min(movingAmphipodHallwayPosition, hallwayAmphipodHallwayPosition);
+                                    int maxHallwayPosition = max(movingAmphipodHallwayPosition, hallwayAmphipodHallwayPosition);
+
+                                    if (j > minHallwayPosition && j < maxHallwayPosition && 
+                                        k > minHallwayPosition && k < maxHallwayPosition) {
+                                        hallwayPositionValid = false;
+                                    }
+                                }
+                            }
+
+                            if (hallwayPositionValid) {
+                                int energy = burrowState->energy + 
+                                    (stepsOutOfRoom + abs(room->hallwayPosition - j)) * amphipodEnergy[amphipod - 'A'];
+
+                                unsigned int hash = burrowHash(&newBurrow);
+
+                                if (burrowStateCosts[hash] == 0 || energy < burrowStateCosts[hash]) {
+                                    struct BurrowState *newBurrowState = (struct BurrowState *)calloc(1, sizeof(struct BurrowState));
+                                    newBurrowState->burrow = newBurrow;
+                                    newBurrowState->energy = energy;
+
+                                    burrowStateCosts[hash] = energy;
+
+                                    enqueueBurrowState(burrowStateQueue, newBurrowState);
+                                }
+                            }
                         }
                     }
                 }
             }
         }
+
+        free(burrowState);
     }
 
-    for (int i = 0; i < burrowStateCosts->size; i++) {
-        free(burrowStateCosts->data[i]);
+    while (burrowStateQueue->size) {
+        free(dequeueBurrowState(burrowStateQueue));
     }
 
     free(burrowStateCosts);
@@ -411,13 +437,21 @@ bool readBurrow(char *filename, struct Burrow *burrow) {
         fgets(diagramLine, sizeof(diagramLine), inputFile);
         fgets(diagramLine, sizeof(diagramLine), inputFile);
 
-        strncpy(burrow->hallway, diagramLine + 1, 11);
+        strncpy(burrow->hallway, diagramLine + 1, HALLWAY_LENGTH);
 
         for (int i = 0; i < ROOM_DEPTH; i++) {
             if (i == 0) {
-                fscanf(inputFile, "###%c#%c#%c#%c###", &burrow->aRoom.amphipods[i], &burrow->bRoom.amphipods[i], &burrow->cRoom.amphipods[i], &burrow->dRoom.amphipods[i]);
+                fscanf(inputFile, "###%c#%c#%c#%c###", 
+                    &burrow->aRoom.amphipods[i], 
+                    &burrow->bRoom.amphipods[i], 
+                    &burrow->cRoom.amphipods[i], 
+                    &burrow->dRoom.amphipods[i]);
             } else {
-                fscanf(inputFile, "  #%c#%c#%c#%c#  ", &burrow->aRoom.amphipods[i], &burrow->bRoom.amphipods[i], &burrow->cRoom.amphipods[i], &burrow->dRoom.amphipods[i]);
+                fscanf(inputFile, "  #%c#%c#%c#%c#  ", 
+                    &burrow->aRoom.amphipods[i], 
+                    &burrow->bRoom.amphipods[i], 
+                    &burrow->cRoom.amphipods[i], 
+                    &burrow->dRoom.amphipods[i]);
             }
         }
 
