@@ -369,7 +369,7 @@ int organizeBurrow(struct Burrow original) {
 
                             bool hallwayPositionValid = true;
 
-                            // see if the recently moved amphipod is blocking another amphipod from going to its room and vice versa
+                            // see if the recently moved amphipod and another amphipod are both blocking one another from their rooms
                             for (int k = 0; hallwayPositionValid && k < HALLWAY_LENGTH; k++) {
                                 if (k != j && isalpha(newBurrow.hallway[k]) && newBurrow.hallway[k] != amphipod) {
                                     char hallwayAmphipod = newBurrow.hallway[k];
