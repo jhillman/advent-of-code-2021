@@ -122,13 +122,6 @@ struct BurrowState {
     int energy;
 };
 
-int compare(const void *a, const void *b) {
-    struct BurrowState *first = *(struct BurrowState **)a;
-    struct BurrowState *second = *(struct BurrowState **)b;
-
-    return compareBurrows(&first->burrow, &second->burrow);
-}
-
 void swap(struct BurrowState **a, struct BurrowState **b) {
     struct BurrowState *temp = *b;
 
@@ -383,6 +376,63 @@ int organizeBurrow(struct Burrow original) {
                                     }
                                 }
                             }
+
+                            // not reliable because it doesn't look at all possible moves, which would be really difficult; maybe take another look at this later
+                            // if (hallwayPositionValid) {
+                            //     struct Room *destinationRoom = roomForAmphipod(burrow, amphipod);
+                            //     char *roomPosition = destinationRoom->amphipods + ROOM_DEPTH - 1;
+                            //     int amphipodsToMove = 0;
+
+                            //     while (*roomPosition == amphipod) {
+                            //         --roomPosition;
+                            //     }
+
+                            //     while (roomPosition >= destinationRoom->amphipods && *roomPosition != '.') {
+                            //         ++amphipodsToMove;
+                            //         --roomPosition;
+                            //     }
+
+                            //     int hallwaySpacesAvailable = 0;
+                            //     int destinationRoomHallwayPosition = destinationRoom->hallwayPosition;
+
+                            //     char hallway[HALLWAY_LENGTH];
+                            //     strncpy(hallway, newBurrow.hallway, HALLWAY_LENGTH);
+
+                            //     for (int k = destinationRoomHallwayPosition; k >= 0 && k < HALLWAY_LENGTH;) {
+                            //         if ((k == 0 || k == 10 || k % 2 == 1)) {
+                            //             if (hallway[k] == '.') {
+                            //                 ++hallwaySpacesAvailable;
+                            //             } else {
+                            //                 struct Room *hallwayAmphipodDestinationRoom = roomForAmphipod(&newBurrow, hallway[k]);
+
+                            //                 if (roomAvailable(hallwayAmphipodDestinationRoom) && burrowHallwayPathClear(hallway, k, hallwayAmphipodDestinationRoom->hallwayPosition)) {
+                            //                     hallway[k] = '.';
+                            //                     ++hallwaySpacesAvailable;
+                            //                 } else {
+                            //                     break;
+                            //                 }
+                            //             }
+                            //         } 
+
+                            //         if (destinationRoomHallwayPosition < j) {
+                            //             --k;
+                            //         } else {
+                            //             ++k;
+                            //         }
+                            //     }
+
+                            //     if (amphipodsToMove > hallwaySpacesAvailable) {
+                            //         printf("%d amphipods to move to the %s, but only %d spaces available before %c at %d can go home\n", 
+                            //             amphipodsToMove, 
+                            //             destinationRoomHallwayPosition < j ? "left" : "right",
+                            //             hallwaySpacesAvailable, 
+                            //             amphipod, 
+                            //             j);
+                            //         printBurrow(&newBurrow);
+
+                            //         hallwayPositionValid = false;
+                            //     }
+                            // }
 
                             if (hallwayPositionValid) {
                                 int energy = burrowState->energy + 
