@@ -275,7 +275,7 @@ int organizeBurrow(struct Burrow original) {
             break;
         }
 
-        // move amphipods in hallway into their rooms
+        // move amphipods in the hallway into their rooms
         for (int i = 0; i < HALLWAY_LENGTH; i++) {
             if (isalpha(burrow->hallway[i])) {
                 char amphipod = burrow->hallway[i];
