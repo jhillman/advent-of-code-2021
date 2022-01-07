@@ -373,6 +373,54 @@ int organizeBurrow(struct Burrow original) {
                                 }
                             }
 
+                            if (hallwayPositionValid && (amphipod == 'A' && j == 3) || (amphipod == 'D' && j == 7)) {
+                                struct Room *destinationRoom = roomForAmphipod(burrow, amphipod);
+                                char *roomPosition = destinationRoom->amphipods + ROOM_DEPTH - 1;
+                                int amphipodsToMove = 0;
+
+                                while (*roomPosition == amphipod) {
+                                    --roomPosition;
+                                }
+
+                                while (roomPosition >= destinationRoom->amphipods && *roomPosition != '.') {
+                                    ++amphipodsToMove;
+                                    --roomPosition;
+                                }
+
+                                int hallwaySpacesAvailable = 0;
+                                int destinationRoomHallwayPosition = destinationRoom->hallwayPosition;
+
+                                char hallway[HALLWAY_LENGTH];
+                                strncpy(hallway, newBurrow.hallway, HALLWAY_LENGTH);
+
+                                for (int k = destinationRoomHallwayPosition; k >= 0 && k < HALLWAY_LENGTH;) {
+                                    if ((k == 0 || k == 10 || k % 2 == 1)) {
+                                        if (hallway[k] == '.') {
+                                            ++hallwaySpacesAvailable;
+                                        } else {
+                                            struct Room *hallwayAmphipodDestinationRoom = roomForAmphipod(&newBurrow, hallway[k]);
+
+                                            if (roomAvailable(hallwayAmphipodDestinationRoom) && burrowHallwayPathClear(hallway, k, hallwayAmphipodDestinationRoom->hallwayPosition)) {
+                                                hallway[k] = '.';
+                                                ++hallwaySpacesAvailable;
+                                            } else {
+                                                break;
+                                            }
+                                        }
+                                    } 
+
+                                    if (destinationRoomHallwayPosition < j) {
+                                        --k;
+                                    } else {
+                                        ++k;
+                                    }
+                                }
+
+                                if (amphipodsToMove > hallwaySpacesAvailable) {
+                                    hallwayPositionValid = false;
+                                }
+                            }
+
                             if (hallwayPositionValid) {
                                 int energy = burrowState->energy + 
                                     (stepsOutOfRoom + abs(room->hallwayPosition - j)) * amphipodEnergy[amphipod - 'A'];
