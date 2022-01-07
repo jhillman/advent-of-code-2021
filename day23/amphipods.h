@@ -373,6 +373,8 @@ int organizeBurrow(struct Burrow original) {
                                 }
                             }
 
+                            // make sure there is enough space in the hallway to clear a room for an amphipod waiting in the hallway
+                            // only check the ends for part 2
                             if (hallwayPositionValid && ROOM_DEPTH == 2 || (amphipod == 'A' && j == 3) || (amphipod == 'D' && j == 7)) {
                                 struct Room *destinationRoom = roomForAmphipod(burrow, amphipod);
                                 char *roomPosition = destinationRoom->amphipods + ROOM_DEPTH - 1;
